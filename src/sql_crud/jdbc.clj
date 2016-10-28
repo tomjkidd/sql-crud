@@ -55,8 +55,9 @@
         (when (not (nil? c))
           (try
             (.rollback c)
-            (catch Exception e nil))))
+            (throw e))))
       (finally
         (when (not (nil? stmt))
           (.close stmt))
         (.close c)))))
+

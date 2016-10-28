@@ -2,29 +2,22 @@
   (:require [sql-crud.database :as db]
             [sql-crud.jdbc :as jdbc]
             [sql-crud.context.util :refer [keyword->db-name
+                                           type->db-type
+                                           type->format
+                                           to-sql-fn
                                            cursor->hash-map]]))
-
-(def type->format
-  {:int "%s"
-   :string "'%s'"
-   :boolean "%s"
-   :keyword "'%s'"})
 
 (defn get-format
   "Looks for a :format key, and in it's absense uses the system defined one for :type"
   [m]
-  (get m :format (type->format (:type m))))
+  (get m :format (type->format m)))
 
 (defn- generate-column-def
   "From a column data definition, create a column definition which can be used 
   to create a table"
-  [{:keys [name type format constraints nullable]}]
+  [{:keys [name type format constraints nullable] :as col}]
   (let [col-name (keyword->db-name name)
-        type' (cond (= type :string) "TEXT"
-                    (= type :int) "INTEGER"
-                    (= type :keyword) "TEXT"
-                    (= type :float) "REAL"
-                    (= type :boolean) "INT")
+        type' (type->db-type col)
         null-text (if (true? nullable) "" "NOT NULL")]
     (clojure.string/join " " (filter (complement empty?)
                                      (flatten [col-name type' constraints null-text])))))
@@ -131,13 +124,8 @@
   can be used to save in sql"
   [{:keys [columns] :as data-definition} m]
   (let [valid-keys (set (map :name columns))
-        dd-to-sql-map (reduce (fn [acc {:keys [name type to-sql]}]
-                                (let [acc (if (= type :keyword)
-                                            (assoc acc name str)
-                                            acc)
-                                      acc (if (= type :boolean)
-                                            (assoc acc name (fn [b]
-                                                              (if b 1 0))))
+        dd-to-sql-map (reduce (fn [acc {:keys [name type to-sql] :as cur}]
+                                (let [acc (assoc acc name (to-sql-fn cur))
                                       acc (if (not (nil? to-sql))
                                             (assoc acc name to-sql)
                                             acc)]
