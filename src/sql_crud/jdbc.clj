@@ -1,6 +1,6 @@
 (ns sql-crud.jdbc
   "JDBC integration code used to manage java.sql"
-  (:import [java.sql DriverManager Connection Statement PreparedStatement ResultSet]))
+  (:import [java.sql DriverManager Connection Statement PreparedStatement ResultSet SQLException]))
 
 ;; TODO: Integrate this information, seems to use .setX functions and `?` in the
 ;; query string in order to pass values, which might be more appropriate than how
@@ -49,8 +49,14 @@
     (.setAutoCommit c false)
     (try
       (let [results (doall (map #(apply execute-query-map %) args))]
-        (.close stmt)
         (.commit c)
         results)
+      (catch SQLException e
+        (when (not (nil? c))
+          (try
+            (.rollback c)
+            (catch Exception e nil))))
       (finally
+        (when (not (nil? stmt))
+          (.close stmt))
         (.close c)))))

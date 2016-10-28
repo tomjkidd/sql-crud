@@ -90,7 +90,7 @@ The `delete!` function allows you to remove records based on a where-map. The
 where-map behaves the same as in `select`, but matches will be removed from
 the database table. An empty where-map will delete all records.
 
-`(delete context {:id 1})`
+`(delete! context {:id 1})`
 
 The `drop!` function allows you to drop a table from the database.
 
