@@ -26,7 +26,7 @@
 
 (deftest type-tests
   (testing "Test that selecting by types behaves as expected"
-    (let [ctx (sql-gen/context type-data-definition)
+    (let [ctx (sql-gen/context (assoc type-data-definition :table-name :type-tests))
           test-records [{:integer 1 :keyword :kw :string "string" :boolean true
                          :float (float 1.0) :double (double 1.0)}
                         {:integer 2 :keyword :kw2 :string "string2" :boolean false
@@ -61,7 +61,7 @@
 
 (deftest update-tests
   (testing "Test that update behavior works as expected"
-    (let [ctx (sql-gen/context type-data-definition)
+    (let [ctx (sql-gen/context (assoc type-data-definition :table-name :update-tests))
           test-record {:integer 1 :keyword :kw :string "string" :boolean true
                        :float (float 0.1) :double (double 0.1)}
           _ (create! ctx)
